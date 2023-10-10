@@ -9,11 +9,17 @@
   --green-transparent-dark: rgba(133, 179, 54, 0.15);
   --green-transparent-light: rgba(133, 179, 54, 0.25);
   --inter-font: "Inter", sans-serif;
+  --skyblue: rgba(56, 189, 248, 1);
 }
 
 body {
   background-color: var(--blue-dark);
   font-family: var(--inter-font);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 .web-title {
@@ -88,15 +94,16 @@ body {
 }
 
 .restart-button {
-  cursor: pointer;
+  margin-top: 2rem;
   background-color: var(--green);
   border-radius: 10px;
   font-size: 1.4rem;
   padding: 0.5rem 2rem;
   font-family: var(--inter-font);
   border: 0;
-  transition: box-shadow 300ms ease;
-  box-shadow: 0px 0px 20px 5px var(--green-transparent-dark);
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+  box-shadow: 0px 0px 20px 5px rgba(133, 179, 54, 0.15);
 }
 
 .restart-button:hover {
@@ -104,11 +111,18 @@ body {
 }
 
 .restart-button:disabled {
+  box-shadow: none;
   cursor: default;
   background-color: var(--blue-dark);
   color: var(--gray);
   border: 1px solid var(--gray);
-  box-shadow: none;
+}
+
+.canvas {
+  box-shadow: 0px 0px 30px -1px var(--skyblue);
+  background: var(--blue-dark);
+  border-radius: 25px;
+  cursor: crosshair;
 }
 
 @keyframes scaleLetter {
@@ -116,3 +130,4 @@ body {
     transform: scale(1.1);
   }
 }
+

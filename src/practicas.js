@@ -1,5 +1,5 @@
-import { Observable, Subject, from, of, asyncScheduler, interval, timer } from "rxjs";
-
+import { Observable, Subject, from, of, asyncScheduler, interval, timer, fromEvent, distinct, distinctUntilChanged, distinctUntilKeyChanged  } from "rxjs";
+import { map, reduce, filter, debounceTime, sampleTime, throttleTime, mergeWith, mergeAll, mergeMap } from "rxjs/operators";
 //Observable
 const observableAlfa$ = new Observable(subscriber => {
     subscriber.next(1);
@@ -49,3 +49,101 @@ const delayedTimer$ = timer(5000);
 
 sequenceNumbers$.subscribe(console.log);
 delayedTimer$.subscribe(console.log);
+
+//map
+const numbersMap$ = from([1,2,3,4,5,6,7])
+.pipe(
+  map(number => number * 2)
+);
+
+numbersMap$.subscribe(console.log);
+
+//reduce
+const numbersReduce$ = from([1,2,3,4,5,6,7])
+.pipe(
+  reduce((acc, val) => acc + val , 0)
+);
+
+numbersReduce$.subscribe(console.log);
+
+//filter
+const numbersFilter$ = from([1,2,3,4,5,6,7])
+.pipe(
+  filter(number => number > 4)
+);
+
+numbersFilter$.subscribe(console.log);
+
+
+//distinct
+const numbersRepitedD$ = of(1,2,3,2,5,6,1,3,7,8).pipe(
+  distinct()
+);
+
+numbersRepitedD$.subscribe(console.log());
+
+//distinctUntilChanged
+const numbersRepitedUc$ = of(1,2,3,2,5,6,1,3,7,8).pipe(
+  distinctUntilChanged()
+);
+
+numbersRepitedUc$.subscribe(console.log());
+
+//distinctUntilChanged
+const numbersRepitedUkc$ = of({'k': 1}, {'k': 1}, {'k': 3}, {'k': 4}, {'k': 4}, {'k': 5}, {'k': 5}).pipe(
+  distinctUntilKeyChanged('k')
+);
+
+numbersRepitedUkc$.subscribe(console.log());
+
+//operadores de tiempo
+const onClick$ = fromEvent(document, 'click').pipe(
+  debounceTime(1000),
+  sampleTime(1000),
+  debounceTime(1000),
+  throttleTime(1000)
+)
+
+onClick$.subscribe(console.log);
+
+//merge
+const onClick1$ = fromEvent(document, "click").pipe(
+  map(event => event.type) // "click"
+);
+const onMouseMove$ = fromEvent(document, "mousemove").pipe(
+  map(event => event.type) // "mousemove"
+);
+
+const eventMergeWith$ = onMouseMove$.pipe(
+  mergeWith(onClick1$)
+);
+
+eventMergeWith$.subscribe((value) => {
+  console.log("obs: ", value)
+});
+
+//mergeAll
+const onClick2$ = fromEvent(document, "click");
+const ordenSuperior$ = onClick2$.pipe(
+    map(() => interval(1000))
+);
+
+const primerOrden$ = ordenSuperior$.pipe(
+    mergeAll()
+);
+
+primerOrden$.subscribe(console.log);
+
+//mergeMap
+const letters$ = from(["A", "B", "C"]);
+const result$ = letters$.pipe(
+    // Anidando el observable letters$ con el observable interval.
+    mergeMap(letter => interval(1000).pipe(
+        // Anida una letra por cada segundo
+        map(
+            second => letter + second
+        )
+    ))
+);
+
+result$.subscribe(console.log);
