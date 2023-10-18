@@ -1,5 +1,5 @@
 import { fromEvent } from "rxjs";
-import { map, mergeAll } from "rxjs/operators";
+import { map, mergeAll, takeUntil } from "rxjs/operators";
 
 const canvas = document.getElementById("reactive-canvas");
 
@@ -12,13 +12,16 @@ const updateCursorPosition = (event) => {
 
 const onMouseDown$ = fromEvent(canvas, "mousedown");
 onMouseDown$.subscribe(updateCursorPosition);
-const onMouseMove$ = fromEvent(canvas, "mousemove");
 const onMouseUp$ = fromEvent(canvas, "mouseup");
+const onMouseMove$ = fromEvent(canvas, "mousemove").pipe(takeUntil(onMouseUp$));
+
 
 onMouseDown$.subscribe();
 
 const canvasContext = canvas.getContext("2d");
 canvasContext.lineWidth = 8;
+canvasContext.lineJoin = 'round';
+canvasContext.lineCap = 'round';
 canvasContext.strokeStyle = "white";
 
 // El método paintStroke nos permitirá dibujar una línea obteniendo las posiciones del cursor (cursorPosition).

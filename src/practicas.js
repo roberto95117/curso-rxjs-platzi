@@ -1,5 +1,5 @@
 import { Observable, Subject, from, of, asyncScheduler, interval, timer, fromEvent, distinct, distinctUntilChanged, distinctUntilKeyChanged  } from "rxjs";
-import { map, reduce, filter, debounceTime, sampleTime, throttleTime, mergeWith, mergeAll, mergeMap } from "rxjs/operators";
+import { map, reduce, filter, debounceTime, sampleTime, throttleTime, mergeWith, mergeAll, mergeMap, takeUntil } from "rxjs/operators";
 //Observable
 const observableAlfa$ = new Observable(subscriber => {
     subscriber.next(1);
@@ -147,3 +147,11 @@ const result$ = letters$.pipe(
 );
 
 result$.subscribe(console.log);
+
+//takeUntil
+const onMouseMoveU$ = fromEvent(document, 'mousemove');
+const onMouseDownU$ = fromEvent(document, 'mousedown');
+
+const sourceCompleted$ = onMouseMoveU$.pipe(takeUntil(onMouseDownU$));
+
+sourceCompleted$.subscribe(console.log);
