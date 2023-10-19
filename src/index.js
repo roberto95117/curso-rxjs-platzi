@@ -1,18 +1,17 @@
-import { fromEvent, Subject } from "rxjs";
+import { fromEvent, Subject, merge } from "rxjs";
 import { map, filter, takeUntil } from "rxjs/operators";
-import WORDS_LIST from "./wordsList.json";
+import WORDS_LIST from "./wordList.json";
 
 const restartButton = document.getElementById("restart-button");
 const letterRows = document.getElementsByClassName("letter-row");
 const messageText = document.getElementById("message-text");
 const onKeyDown$ = fromEvent(document, "keydown");
-let letterIndex = 0;
-let letterRowIndex = 0;
-let userAnswer = [];
+let letterIndex;
+let letterRowIndex;
+let userAnswer;
 const getRandomWord = () =>
   WORDS_LIST[Math.floor(Math.random() * WORDS_LIST.length)];
-let rightWord = getRandomWord();
-console.log(`Right word: ${rightWord}`);
+let rightWord;
 
 const userWinOrLoose$ = new Subject();
 
@@ -37,13 +36,23 @@ const insertLetter = {
 
 const checkWord$ = onKeyDown$.pipe(
   map((event) => event.key),
-  filter((key) => key === "Enter" && letterIndex === 5 && letterRowIndex <= 5)
+  filter((key) => key === "Enter" && letterRowIndex < 6)
 );
 
 const checkWord = {
   next: () => {
-    if (userAnswer.length !== 5) {
-      messageText.textContent = "¡Te faltan algunas letras!";
+    if (userAnswer.length != 5) {
+      messageText.textContent =
+        userAnswer.length === 4
+          ? "Te falta 1 letra"
+          : `Te faltan ${5 - userAnswer.length} letras`;
+      return;
+    }
+
+    if (!WORDS_LIST.includes(userAnswer.join(""))) {
+      messageText.textContent = `¡La palabra ${userAnswer
+        .join("")
+        .toUpperCase()} no está en la lista!`;
       return;
     }
 
@@ -66,7 +75,6 @@ const checkWord = {
       }
       letterBox.classList.add(letterColor);
     });
-
 
     if (userAnswer.join("") === rightWord) {
       messageText.textContent = `😊 ¡Sí! La palabra ${rightWord.toUpperCase()} es la correcta`;
@@ -101,16 +109,35 @@ const removeLetter = {
   },
 };
 
-userWinOrLoose$.subscribe(() => {
-  let letterRowsWinned = letterRows[letterRowIndex];
-  for (let i = 0; i < 5; i++) {
-    letterRowsWinned.children[i].classList.add("letter-green");
-  }
-});
+const onRestartClick$ = fromEvent(restartButton, "click");
+const onWindowLoad$ = fromEvent(window, "load");
+const restartGame$ = merge(onWindowLoad$, onRestartClick$);
 
-// Ahora suscribimos los observables, pero antes los encadenamos con takeUntil(userWinOrLoose$):
-// ✅ De esa forma, cuando se ejecuta userWinOrLoose$.next() (ver línea 85, línea 94), se completarán
-// los observables devueltos por insertLetter$, checkWord$, removeLetter$.
-insertLetter$.pipe(takeUntil(userWinOrLoose$)).subscribe(insertLetter);
-checkWord$.pipe(takeUntil(userWinOrLoose$)).subscribe(checkWord);
-removeLetter$.pipe(takeUntil(userWinOrLoose$)).subscribe(removeLetter);
+restartGame$.subscribe(() => {
+  Array.from(letterRows).map((row) =>
+    Array.from(row.children).map((letterBox) => {
+      letterBox.textContent = "";
+      letterBox.classList = "letter";
+    })
+  );
+
+  letterRowIndex = 0;
+  letterIndex = 0;
+  userAnswer = [];
+  messageText.textContent = "";
+  rightWord = getRandomWord();
+
+  restartButton.disabled = true;
+
+  console.log(`Right word: ${rightWord}`);
+
+  let insertLetterSubscription = insertLetter$
+    .pipe(takeUntil(userWinOrLoose$))
+    .subscribe(insertLetter);
+  let checkWordSubscription = checkWord$
+    .pipe(takeUntil(userWinOrLoose$))
+    .subscribe(checkWord);
+  let removeLetterSubscription = removeLetter$
+    .pipe(takeUntil(userWinOrLoose$))
+    .subscribe(removeLetter);
+});;
