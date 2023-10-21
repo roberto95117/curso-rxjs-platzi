@@ -1,5 +1,8 @@
 import { Observable, Subject, from, of, asyncScheduler, interval, timer, fromEvent, distinct, distinctUntilChanged, distinctUntilKeyChanged  } from "rxjs";
-import { map, reduce, filter, debounceTime, sampleTime, throttleTime, mergeWith, mergeAll, mergeMap, takeUntil, startWith, endWith } from "rxjs/operators";
+import { map, reduce, filter, debounceTime, sampleTime, throttleTime, mergeWith, mergeAll, mergeMap, takeUntil, startWith, endWith, catchError, retry } from "rxjs/operators";
+import { ajax } from 'rxjs/ajax';
+import { fromFetch } from "rxjs/fetch";
+
 //Observable
 const observableAlfa$ = new Observable(subscriber => {
     subscriber.next(1);
@@ -165,3 +168,64 @@ lettersStart$.subscribe(console.log);
 const lettersEndWith$ = of('a','b','c','d').pipe(endWith('f'));
 
 lettersEndWith$.subscribe(console.log);
+
+//catchError & retry
+const lettersCatchError$ = of('a','b','c','d').pipe(
+  map(item => {
+    if(item == 'c'){
+      x = 5;
+    }
+  }),
+  retry(3),
+  catchError(error => of(error.message))
+);
+
+lettersCatchError$.subscribe(console.log);
+
+
+//ajax
+const ditto$ = ajax("https://pokeapi.co/api/v2/pokemon/itto").pipe(
+  map((data) => console.log(data.response)),
+  catchError((error) => {
+    console.log("Error: ", error.message);
+    return of(error);
+  })
+);
+
+ditto$.subscribe(console.log);
+
+
+const postRequest$ = ajax({
+  url: "https://httpbin.org/delay/5",
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: {
+    message: "¿Dónde está Ditto?",
+  },
+}).pipe(
+  map((response) => {
+    console.log(response);
+    return response;
+  }),
+  catchError((error) => {
+    console.log("Error: ", error.message);
+    return of(error);
+  })
+);
+
+postRequest$.subscribe(console.log);
+
+//fromFetch
+// Petición HTTP con un retraso de 4 segundos.
+const url = "https://httpbin.org/delay/4";
+const dittoFetch$ = fromFetch(url).pipe(
+  mergeMap((response) => {
+    return response.json();
+  }),
+  takeUntil(timer(6000)) // ⬅️ Puedes modificar la cantidad de milisegundos
+                         //   para abortar una petición HTTP enviada.
+);
+
+dittoFetch$.subscribe(console.log);
